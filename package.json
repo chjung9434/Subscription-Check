@@ -16,7 +16,9 @@
     "test:db": "vitest run --config vitest.db.config.mts",
     "db:start": "supabase db start",
     "db:reset": "supabase db reset",
-    "db:types": "supabase gen types typescript --local > types/supabase.ts"
+    "db:types": "supabase gen types typescript --local > types/supabase.ts",
+    "db:verify": "node scripts/verify-db.mjs",
+    "predeploy:check": "npm run type-check && npm run lint && npm test && npm run build"
   },
   "dependencies": {
     "@supabase/ssr": "0.12.7",

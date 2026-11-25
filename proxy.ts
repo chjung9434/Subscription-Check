@@ -26,6 +26,6 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  // 정적 파일·이미지·폰트·서비스 워커·크론 발송 엔드포인트(자체 인증)는 제외
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|sw.js|manifest.webmanifest|api/v1/notifications/dispatch|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff2?)$).*)"],
+  // 정적 파일·이미지·폰트·서비스 워커·크론 발송·헬스 체크 엔드포인트는 제외
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|sw.js|manifest.webmanifest|api/v1/notifications/dispatch|api/health|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff2?)$).*)"],
 };
