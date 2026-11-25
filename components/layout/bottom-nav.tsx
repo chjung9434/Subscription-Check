@@ -4,8 +4,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { NAV_ITEMS, isActivePath } from "./nav-items";
 
+/** 구독 등록·상세·수정 같은 하위 작업 화면에서는 탭 바를 숨겨 작업에 집중하게 한다 (뒤로가기 링크 제공). */
+const HIDDEN_ON = /^\/subscriptions\/.+/;
+
 export function BottomNav() {
   const pathname = usePathname();
+  if (HIDDEN_ON.test(pathname)) return null;
 
   return (
     <nav

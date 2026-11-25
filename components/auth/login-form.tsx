@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useActionState, useState } from "react";
 import { signInWithEmailAction, signInWithOAuthAction, signUpWithEmailAction } from "@/lib/auth/actions";
-import { IDLE, type AuthFormState } from "@/lib/auth/form-state";
+import { IDLE, type FormState } from "@/lib/form-state";
 import { Dialog } from "@/components/ui/dialog";
 import { FormMessage } from "@/components/ui/form-message";
 import { Spinner } from "@/components/ui/spinner";
@@ -18,7 +18,7 @@ export function LoginForm({ returnUrl, notice }: { returnUrl: string; notice?: {
   const [signUpState, signUp, signingUp] = useActionState(signUpWithEmailAction, IDLE);
   const [oauthState, oauth, oauthPending] = useActionState(signInWithOAuthAction, IDLE);
   // 제출마다 새 결과 객체가 오므로, 닫은 결과와 같으면 숨기고 새 결과면 다시 연다
-  const [dismissedGuide, setDismissedGuide] = useState<AuthFormState | null>(null);
+  const [dismissedGuide, setDismissedGuide] = useState<FormState | null>(null);
   const guideOpen = oauthState.status === "error" && oauthState.code === "OAUTH_NOT_CONFIGURED" && dismissedGuide !== oauthState;
 
   const state = mode === "signin" ? signInState : signUpState;

@@ -7,7 +7,7 @@ export function FormMessage({ tone, children }: { tone: "error" | "success"; chi
     <div
       role={tone === "error" ? "alert" : "status"}
       className={`flex items-start gap-2 rounded-xl p-3 text-body ${
-        tone === "error" ? "bg-status-danger-subtle text-status-danger" : "bg-status-success-subtle text-status-success"
+        tone === "error" ? "bg-status-danger-subtle text-status-danger-foreground" : "bg-status-success-subtle text-status-success-foreground"
       }`}
     >
       <Icon aria-hidden="true" className="mt-0.5 size-5 shrink-0" />

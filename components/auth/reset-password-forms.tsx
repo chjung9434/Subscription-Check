@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useActionState } from "react";
 import { requestPasswordResetAction, updatePasswordAction } from "@/lib/auth/actions";
-import { IDLE } from "@/lib/auth/form-state";
+import { IDLE } from "@/lib/form-state";
 import { FormMessage } from "@/components/ui/form-message";
 import { Spinner } from "@/components/ui/spinner";
 import { buttonStyles } from "@/components/ui/styles";

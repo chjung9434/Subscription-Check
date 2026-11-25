@@ -3,9 +3,18 @@ import { BILLING_CYCLES, CURRENCY_CODES, REMIND_DAY_OPTIONS, SUBSCRIPTION_STATUS
 
 /** DB 제약과 같은 규칙: 카드·계좌번호처럼 보이는 12자리 이상 연속 숫자(공백·하이픈 허용) */
 const CARD_LIKE_NUMBER = /[0-9][0-9 -]{10,}[0-9]/;
+/** 카드 보안코드로 보이는 표기 (예: "CVC 123", "cvv:1234", "보안코드 123") */
+const SECURITY_CODE = /(cvc|cvv|보안\s*코드)\s*[:=]?\s*\d{3,4}/i;
+const SENSITIVE_MESSAGE = "카드번호나 보안코드 같은 민감한 결제 정보는 입력할 수 없어요.";
+
+/** 카드번호·보안코드처럼 보이는 텍스트인지 (결제 수단 메모·메모 공통) */
+export function containsSensitivePaymentInfo(value: string): boolean {
+  return CARD_LIKE_NUMBER.test(value) || SECURITY_CODE.test(value);
+}
 
 const isoDate = z
-  .string()
+  .string({ error: "날짜를 선택해 주세요." })
+  .min(1, "날짜를 선택해 주세요.")
   .regex(/^\d{4}-\d{2}-\d{2}$/, "날짜는 YYYY-MM-DD 형식이어야 해요.")
   .refine((value) => {
     const [year, month, day] = value.split("-").map(Number);
@@ -24,7 +33,7 @@ const remindDays = z
   .refine((days) => new Set(days).size === days.length, "같은 알림 시점을 중복해서 고를 수 없어요.");
 
 const amount = z
-  .number()
+  .number({ error: "결제 금액을 숫자로 입력해 주세요." })
   .nonnegative("금액은 0 이상이어야 해요.")
   .max(9_999_999_999.99, "금액이 너무 커요.")
   .refine((value) => Math.abs(value * 100 - Math.round(value * 100)) < 1e-6, "금액은 소수점 둘째 자리까지 입력할 수 있어요.");
@@ -33,21 +42,27 @@ const paymentMethodMemo = z
   .string()
   .trim()
   .max(50, "결제 수단 메모는 50자 이내로 적어 주세요.")
-  .refine((value) => !CARD_LIKE_NUMBER.test(value), "카드번호나 계좌번호는 저장할 수 없어요. '현대카드'처럼 별칭만 적어 주세요.")
+  .refine((value) => !containsSensitivePaymentInfo(value), "카드번호나 보안코드는 저장할 수 없어요. '현대카드'처럼 별칭만 적어 주세요.")
   .nullable();
 
 const subscriptionFields = z.object({
   preset_id: z.uuid().nullable().optional(),
-  service_name: z.string().trim().min(1, "서비스명을 입력해 주세요.").max(100),
-  category: z.string().trim().min(1, "카테고리를 선택해 주세요.").max(50),
+  service_name: z.string({ error: "서비스명을 입력해 주세요." }).trim().min(1, "서비스명을 입력해 주세요.").max(100, "100자 이하로 입력해 주세요."),
+  category: z.string({ error: "카테고리를 선택해 주세요." }).trim().min(1, "카테고리를 선택해 주세요.").max(50),
   amount,
-  currency: z.enum(CURRENCY_CODES),
-  billing_cycle: z.enum(BILLING_CYCLES),
+  currency: z.enum(CURRENCY_CODES, { error: "통화를 선택해 주세요." }),
+  billing_cycle: z.enum(BILLING_CYCLES, { error: "결제 주기를 선택해 주세요." }),
   billing_day: z.number().int().min(1).max(31),
   next_billing_date: isoDate,
   payment_method_memo: paymentMethodMemo.optional(),
-  memo: z.string().trim().max(1000).nullable().optional(),
-  status: z.enum(SUBSCRIPTION_STATUSES).optional(),
+  memo: z
+    .string()
+    .trim()
+    .max(500, "메모는 500자 이하로 입력해 주세요.")
+    .refine((value) => !containsSensitivePaymentInfo(value), SENSITIVE_MESSAGE)
+    .nullable()
+    .optional(),
+  status: z.enum(SUBSCRIPTION_STATUSES, { error: "이용 상태를 선택해 주세요." }).optional(),
   use_custom_alert: z.boolean().optional(),
   custom_alert_days: remindDays.nullable().optional(),
   custom_alert_time: timeOfDay.nullable().optional(),

@@ -19,8 +19,15 @@
   --color-status-success: #059669;
   --color-status-warning: #d97706;
   --color-status-danger: #dc2626;
-  --color-status-danger-subtle: #fef2f2; /* 오류 배너 배경 */
-  --color-status-success-subtle: #ecfdf5; /* 성공 안내 배경 */
+  /* 상태 색 위에 올리는 텍스트용 진한 색 (스펙 상태 색은 흰 배경 본문 대비 4.5:1 미달: success 3.77, warning 3.19) */
+  --color-status-success-foreground: #047857;
+  --color-status-warning-foreground: #b45309;
+  --color-status-danger-foreground: #b91c1c;
+  --color-status-success-subtle: #ecfdf5;
+  --color-status-warning-subtle: #fffbeb;
+  --color-status-danger-subtle: #fef2f2;
+  --color-neutral-subtle: #f3f4f6; /* 종료 상태 배지 배경 */
+  --color-neutral-foreground: #4b5563;
   /* 소셜 로그인 버튼 (제공자 표준 색) */
   --color-kakao: #fee500;
   --color-kakao-foreground: #191919;

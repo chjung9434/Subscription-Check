@@ -2,7 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { deleteAccountAction } from "@/lib/auth/actions";
-import { IDLE } from "@/lib/auth/form-state";
+import { IDLE } from "@/lib/form-state";
 import { TextField } from "@/components/auth/text-field";
 import { Dialog } from "@/components/ui/dialog";
 import { FormMessage } from "@/components/ui/form-message";

@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import type { z } from "zod";
 import { isOAuthProviderReady } from "@/lib/auth/oauth-config";
-import type { AuthFormState, FieldErrors } from "@/lib/auth/form-state";
+import type { FormState, FieldErrors } from "@/lib/form-state";
 import { safeRedirectPath } from "@/lib/auth/redirect";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { requirePublicEnv } from "@/lib/supabase/env";
@@ -24,7 +24,7 @@ const text = (formData: FormData, name: string) => {
   return typeof value === "string" ? value : "";
 };
 
-function validationError(error: z.ZodError): AuthFormState {
+function validationError(error: z.ZodError): FormState {
   const fieldErrors: FieldErrors = {};
   for (const issue of error.issues) {
     const key = String(issue.path[0] ?? "form");
@@ -33,7 +33,7 @@ function validationError(error: z.ZodError): AuthFormState {
   return { status: "error", code: "VALIDATION_ERROR", message: "입력한 내용을 확인해 주세요.", fieldErrors };
 }
 
-function unexpected(operation: string, error: { code?: string; status?: number; name?: string }): AuthFormState {
+function unexpected(operation: string, error: { code?: string; status?: number; name?: string }): FormState {
   console.error(`[auth] ${operation} failed`, { name: error.name, code: error.code, status: error.status });
   return { status: "error", code: "UNEXPECTED", message: GENERIC_ERROR };
 }
@@ -44,14 +44,14 @@ const callbackUrl = (next: string) => {
   return url.toString();
 };
 
-const withEmail = (state: AuthFormState, formData: FormData): AuthFormState =>
+const withEmail = (state: FormState, formData: FormData): FormState =>
   state.status === "error" ? { ...state, email: text(formData, "email") } : state;
 
-export async function signUpWithEmailAction(_prev: AuthFormState, formData: FormData): Promise<AuthFormState> {
+export async function signUpWithEmailAction(_prev: FormState, formData: FormData): Promise<FormState> {
   return withEmail(await signUp(formData), formData);
 }
 
-async function signUp(formData: FormData): Promise<AuthFormState> {
+async function signUp(formData: FormData): Promise<FormState> {
   const parsed = SignUpInputSchema.safeParse({ email: text(formData, "email"), password: text(formData, "password") });
   if (!parsed.success) return validationError(parsed.error);
 
@@ -86,11 +86,11 @@ async function signUp(formData: FormData): Promise<AuthFormState> {
   redirect(safeRedirectPath(text(formData, "returnUrl")));
 }
 
-export async function signInWithEmailAction(_prev: AuthFormState, formData: FormData): Promise<AuthFormState> {
+export async function signInWithEmailAction(_prev: FormState, formData: FormData): Promise<FormState> {
   return withEmail(await signIn(formData), formData);
 }
 
-async function signIn(formData: FormData): Promise<AuthFormState> {
+async function signIn(formData: FormData): Promise<FormState> {
   const parsed = SignInInputSchema.safeParse({ email: text(formData, "email"), password: text(formData, "password") });
   if (!parsed.success) return validationError(parsed.error);
 
@@ -113,7 +113,7 @@ async function signIn(formData: FormData): Promise<AuthFormState> {
   redirect(safeRedirectPath(text(formData, "returnUrl")));
 }
 
-export async function signInWithOAuthAction(_prev: AuthFormState, formData: FormData): Promise<AuthFormState> {
+export async function signInWithOAuthAction(_prev: FormState, formData: FormData): Promise<FormState> {
   const parsed = OAuthProviderSchema.safeParse(text(formData, "provider"));
   if (!parsed.success) return { status: "error", code: "VALIDATION_ERROR", message: "지원하지 않는 로그인 방식이에요." };
 
@@ -148,11 +148,11 @@ export async function signOutAction(): Promise<void> {
   redirect("/auth/login");
 }
 
-export async function requestPasswordResetAction(_prev: AuthFormState, formData: FormData): Promise<AuthFormState> {
+export async function requestPasswordResetAction(_prev: FormState, formData: FormData): Promise<FormState> {
   return withEmail(await requestPasswordReset(formData), formData);
 }
 
-async function requestPasswordReset(formData: FormData): Promise<AuthFormState> {
+async function requestPasswordReset(formData: FormData): Promise<FormState> {
   const parsed = PasswordResetRequestSchema.safeParse({ email: text(formData, "email") });
   if (!parsed.success) return validationError(parsed.error);
 
@@ -172,7 +172,7 @@ async function requestPasswordReset(formData: FormData): Promise<AuthFormState> 
   return { status: "success", message: "비밀번호 재설정 메일이 발송되었습니다. 메일함을 확인해 주세요." };
 }
 
-export async function updatePasswordAction(_prev: AuthFormState, formData: FormData): Promise<AuthFormState> {
+export async function updatePasswordAction(_prev: FormState, formData: FormData): Promise<FormState> {
   const parsed = UpdatePasswordSchema.safeParse({ password: text(formData, "password") });
   if (!parsed.success) return validationError(parsed.error);
 
@@ -196,7 +196,7 @@ export async function updatePasswordAction(_prev: AuthFormState, formData: FormD
   return { status: "success", message: "비밀번호를 변경했어요. 새 비밀번호로 계속 이용할 수 있어요." };
 }
 
-export async function deleteAccountAction(_prev: AuthFormState, formData: FormData): Promise<AuthFormState> {
+export async function deleteAccountAction(_prev: FormState, formData: FormData): Promise<FormState> {
   const supabase = await createSupabaseServerClient();
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) {

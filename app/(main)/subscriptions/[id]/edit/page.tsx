@@ -1,17 +1,36 @@
+import { notFound } from "next/navigation";
+import { SubscriptionForm } from "@/components/subscriptions/subscription-form";
 import { BackLink } from "@/components/ui/back-link";
 import { PageHeading } from "@/components/ui/page-heading";
-import { PlaceholderCard } from "@/components/ui/placeholder-card";
+import { updateSubscriptionAction } from "@/lib/actions/subscriptions";
+import { getSubscriptionDetail } from "@/lib/data/subscriptions";
 
 export default async function EditSubscriptionPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  const subscription = await getSubscriptionDetail(id);
+  if (!subscription) notFound();
 
   return (
     <>
-      <BackLink href={`/subscriptions/${encodeURIComponent(id)}`} label="상세 정보로" />
+      <BackLink href={`/subscriptions/${subscription.id}`} label="상세 정보로" />
       <PageHeading title="구독 정보 수정" />
-      <PlaceholderCard title="수정 양식">
-        <p>등록한 구독 정보를 고치는 양식이 이곳에 들어갈 예정이에요.</p>
-      </PlaceholderCard>
+      <SubscriptionForm
+        action={updateSubscriptionAction}
+        subscriptionId={subscription.id}
+        submitLabel="수정 완료"
+        initial={{
+          presetId: subscription.presetId,
+          serviceName: subscription.serviceName,
+          category: subscription.category,
+          amount: String(subscription.amount),
+          currency: subscription.currency,
+          billingCycle: subscription.billingCycle,
+          nextBillingDate: subscription.nextBillingDate,
+          paymentMethodMemo: subscription.paymentMethodMemo ?? "",
+          memo: subscription.memo ?? "",
+          status: subscription.status,
+        }}
+      />
     </>
   );
 }
