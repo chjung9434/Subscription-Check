@@ -12,3 +12,6 @@ export const inputStyles =
   "min-h-11 w-full rounded-xl border border-border-strong bg-surface px-3 text-body text-foreground placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:bg-background";
 
 export const cardStyles = "rounded-xl border border-border bg-surface p-4";
+
+export const dangerButtonStyles = `${base} bg-status-danger text-primary-foreground`;
+export const kakaoButtonStyles = `${base} bg-kakao text-kakao-foreground`;

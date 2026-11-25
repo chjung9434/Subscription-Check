@@ -19,6 +19,12 @@
   --color-status-success: #059669;
   --color-status-warning: #d97706;
   --color-status-danger: #dc2626;
+  --color-status-danger-subtle: #fef2f2; /* 오류 배너 배경 */
+  --color-status-success-subtle: #ecfdf5; /* 성공 안내 배경 */
+  /* 소셜 로그인 버튼 (제공자 표준 색) */
+  --color-kakao: #fee500;
+  --color-kakao-foreground: #191919;
+  --color-naver: #03c75a;
 
   /* Typography */
   --font-sans: var(--font-pretendard), "Pretendard", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
