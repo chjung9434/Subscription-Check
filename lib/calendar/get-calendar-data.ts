@@ -1,6 +1,7 @@
 import "server-only";
 
 import { readTimeout } from "@/lib/data/read-timeout";
+import { requireSessionUser } from "@/lib/data/session-user";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { buildCalendarProjection, monthEnd, monthStart, type MonthlyCalendarProjection } from "./calendar-utils";
 import { CalendarQuerySchema } from "./query";
@@ -9,13 +10,12 @@ import { CalendarQuerySchema } from "./query";
 export async function getCalendarMonthlySchedules(input: { year: number; month: number }, today: string): Promise<MonthlyCalendarProjection> {
   const { year, month } = CalendarQuerySchema.parse(input);
   const supabase = await createSupabaseServerClient();
-  const { data: auth, error: authError } = await supabase.auth.getUser();
-  if (authError || !auth.user) throw new Error("로그인이 필요합니다.");
+  const user = await requireSessionUser(supabase);
 
   const { data, error } = await supabase
     .from("subscriptions")
     .select("id, service_name, category, amount, currency, billing_cycle, payment_method_memo, next_billing_date, status")
-    .eq("user_id", auth.user.id)
+    .eq("user_id", user.id)
     .eq("status", "ACTIVE")
     .gte("next_billing_date", monthStart(year, month))
     .lte("next_billing_date", monthEnd(year, month))

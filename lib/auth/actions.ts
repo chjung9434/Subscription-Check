@@ -138,14 +138,18 @@ export async function signInWithOAuthAction(_prev: FormState, formData: FormData
   redirect(data.url);
 }
 
-export async function signOutAction(): Promise<void> {
+/**
+ * 세션 종료. 이동은 클라이언트가 전체 페이지 이동(location.replace)으로 한다:
+ * 클라이언트 라우터 캐시에 남은 보호 화면이 뒤로가기로 다시 보이지 않게 하기 위함.
+ */
+export async function signOutAction(): Promise<FormState> {
   const supabase = await createSupabaseServerClient();
   const { error } = await supabase.auth.signOut();
   if (error) {
     console.error("[auth] signOut failed", { code: error.code, status: error.status });
-    throw new Error("로그아웃하지 못했어요. 잠시 후 다시 시도해 주세요.");
+    return { status: "error", code: "SIGN_OUT_FAILED", message: "로그아웃하지 못했어요. 잠시 후 다시 시도해 주세요." };
   }
-  redirect("/auth/login");
+  return { status: "success", message: "로그아웃했어요." };
 }
 
 export async function requestPasswordResetAction(_prev: FormState, formData: FormData): Promise<FormState> {
@@ -218,6 +222,7 @@ export async function deleteAccountAction(_prev: FormState, formData: FormData):
   if (signOut.error) {
     console.error("[auth] local signOut after deletion failed", { code: signOut.error.code, status: signOut.error.status });
   }
-  redirect("/auth/login?status=deleted");
+  // 이동은 클라이언트가 전체 페이지 이동으로 (뒤로가기로 탈퇴 전 화면이 보이지 않게)
+  return { status: "success", message: "탈퇴가 완료되었어요." };
 }
 

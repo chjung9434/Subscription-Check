@@ -1,6 +1,7 @@
 import "server-only";
 
 import { readTimeout } from "@/lib/data/read-timeout";
+import { requireSessionUser } from "@/lib/data/session-user";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { BillingCycleType, CurrencyCode, SubscriptionRow, SubscriptionStatus } from "@/types/database";
 
@@ -29,11 +30,8 @@ export interface SubscriptionDetail extends SubscriptionListItem {
 /** 로그인 사용자를 확인한다. proxy가 보호 경로를 막지만 데이터 함수도 스스로 확인한다. */
 async function requireUser() {
   const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase.auth.getUser();
-  if (error || !data.user) {
-    throw new Error("로그인이 필요합니다.");
-  }
-  return { supabase, userId: data.user.id };
+  const user = await requireSessionUser(supabase);
+  return { supabase, userId: user.id };
 }
 
 const toListItem = (row: Pick<SubscriptionRow, "id" | "service_name" | "category" | "amount" | "currency" | "billing_cycle" | "next_billing_date" | "payment_method_memo" | "status" | "preset_id">): SubscriptionListItem => ({

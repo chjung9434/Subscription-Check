@@ -2,6 +2,7 @@ import "server-only";
 
 import { cache } from "react";
 import { readTimeout } from "@/lib/data/read-timeout";
+import { requireSessionUser } from "@/lib/data/session-user";
 import { findPendingConfirmations, type PendingConfirmationSubscriptionItem } from "@/lib/dashboard/pending";
 import { summarizeDashboard, type HomeDashboardData } from "@/lib/dashboard/summary";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -10,15 +11,12 @@ import { todayInSeoul } from "@/lib/time/seoul";
 /** 로그인 사용자의 활성 구독 (한 요청 안에서는 한 번만 조회) */
 const loadActiveSubscriptions = cache(async () => {
   const supabase = await createSupabaseServerClient();
-  const { data: auth, error: authError } = await supabase.auth.getUser();
-  if (authError || !auth.user) {
-    throw new Error("로그인이 필요합니다.");
-  }
+  const user = await requireSessionUser(supabase);
 
   const { data, error } = await supabase
     .from("subscriptions")
     .select("id, service_name, category, amount, currency, billing_cycle, billing_day, next_billing_date, payment_method_memo, status")
-    .eq("user_id", auth.user.id)
+    .eq("user_id", user.id)
     .eq("status", "ACTIVE")
     .abortSignal(readTimeout());
   if (error) {

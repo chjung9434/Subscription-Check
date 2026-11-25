@@ -1,6 +1,7 @@
 import "server-only";
 
 import { readTimeout } from "@/lib/data/read-timeout";
+import { requireSessionUser } from "@/lib/data/session-user";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export interface NotificationHistoryItem {
@@ -15,13 +16,12 @@ export interface NotificationHistoryItem {
 /** 로그인 사용자의 최근 알림 30건 (최신순) */
 export async function getNotificationHistory(): Promise<NotificationHistoryItem[]> {
   const supabase = await createSupabaseServerClient();
-  const { data: auth, error: authError } = await supabase.auth.getUser();
-  if (authError || !auth.user) throw new Error("로그인이 필요합니다.");
+  const user = await requireSessionUser(supabase);
 
   const { data, error } = await supabase
     .from("notification_logs")
     .select("id, title, body, sent_at, is_read, status")
-    .eq("user_id", auth.user.id)
+    .eq("user_id", user.id)
     .order("sent_at", { ascending: false })
     .limit(30)
     .abortSignal(readTimeout());
