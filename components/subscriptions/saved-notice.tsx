@@ -7,11 +7,12 @@ const MESSAGES: Record<string, string> = {
 };
 
 /** 저장 후 리다이렉트된 화면 상단의 결과 안내 */
-export function SavedNotice({ saved }: { saved: unknown }) {
+export function SavedNotice({ saved, notify }: { saved: unknown; notify?: unknown }) {
   if (typeof saved !== "string" || !(saved in MESSAGES)) return null;
   return (
-    <div className="mb-4">
+    <div className="mb-4 flex flex-col gap-2">
       <FormMessage tone="success">{MESSAGES[saved]}</FormMessage>
+      {notify === "failed" ? <FormMessage tone="error">결제 사전 알림 예약에 실패했어요. 구독을 다시 저장하면 예약돼요.</FormMessage> : null}
     </div>
   );
 }

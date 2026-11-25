@@ -17,7 +17,7 @@ export default async function SubscriptionDetailPage({
   params: Promise<{ id: string }>;
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const [{ id }, { saved }] = await Promise.all([params, searchParams]);
+  const [{ id }, { saved, notify }] = await Promise.all([params, searchParams]);
   const subscription = await getSubscriptionDetail(id);
   if (!subscription) notFound();
 
@@ -32,7 +32,7 @@ export default async function SubscriptionDetailPage({
   return (
     <>
       <BackLink href="/subscriptions" label="구독 목록으로" />
-      <SavedNotice saved={saved} />
+      <SavedNotice saved={saved} notify={notify} />
       <div className="mb-6 flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h1 className="text-title text-foreground">{subscription.serviceName}</h1>

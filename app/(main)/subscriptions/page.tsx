@@ -7,7 +7,7 @@ import { buttonStyles, cardStyles } from "@/components/ui/styles";
 import { getSubscriptionsList } from "@/lib/data/subscriptions";
 
 export default async function SubscriptionsPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
-  const [{ saved }, items] = await Promise.all([searchParams, getSubscriptionsList()]);
+  const [{ saved, notify }, items] = await Promise.all([searchParams, getSubscriptionsList()]);
 
   return (
     <>
@@ -22,7 +22,7 @@ export default async function SubscriptionsPage({ searchParams }: { searchParams
           ) : null
         }
       />
-      <SavedNotice saved={saved} />
+      <SavedNotice saved={saved} notify={notify} />
       {items.length === 0 ? (
         <section className={`${cardStyles} flex flex-col items-center gap-4 py-10 text-center`}>
           <div>

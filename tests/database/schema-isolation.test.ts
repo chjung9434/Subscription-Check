@@ -30,7 +30,7 @@ const newSubscription = (userId: string, overrides: Record<string, unknown> = {}
 };
 
 describe("schema", () => {
-  it("creates the six tables with row level security enabled", async () => {
+  it("creates every table with row level security enabled", async () => {
     const { rows } = await pool.query<{ relname: string; relrowsecurity: boolean }>(
       `select relname, relrowsecurity from pg_class where relnamespace = 'public'::regnamespace and relkind = 'r' order by relname`,
     );
@@ -39,6 +39,7 @@ describe("schema", () => {
         "notification_logs",
         "notification_preferences",
         "profiles",
+        "push_subscriptions",
         "subscription_notification_schedules",
         "subscription_presets",
         "subscriptions",

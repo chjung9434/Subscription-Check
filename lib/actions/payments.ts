@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { calculateNextBillingDate, parseCalendarDate } from "@/lib/billing/cycle";
+import { syncSubscriptionSchedules } from "@/lib/notifications/scheduler";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 const ConfirmPaymentInputSchema = z.object({
@@ -13,7 +14,7 @@ const ConfirmPaymentInputSchema = z.object({
 export type ConfirmPaymentInput = z.infer<typeof ConfirmPaymentInputSchema>;
 
 export type ConfirmPaymentResult =
-  | { success: true; nextBillingDate: string; message: string }
+  | { success: true; nextBillingDate: string; message: string; warning?: string }
   | {
       success: false;
       error: { code: "UNAUTHORIZED" | "NOT_FOUND" | "CONCURRENT_UPDATE" | "INVALID_STATUS" | "INTERNAL_ERROR" | "VALIDATION_ERROR"; message: string };
@@ -41,7 +42,7 @@ export async function confirmSubscriptionPaymentAction(input: ConfirmPaymentInpu
 
   const { data: current, error: readError } = await supabase
     .from("subscriptions")
-    .select("billing_cycle, billing_day, next_billing_date, status")
+    .select("billing_cycle, billing_day, next_billing_date, status, use_custom_alert, custom_alert_days, custom_alert_time")
     .eq("id", subscriptionId)
     .eq("user_id", userId)
     .maybeSingle();
@@ -84,6 +85,22 @@ export async function confirmSubscriptionPaymentAction(input: ConfirmPaymentInpu
     const { data: latest } = await supabase.from("subscriptions").select("next_billing_date").eq("id", subscriptionId).eq("user_id", userId).maybeSingle();
     if (!latest) return fail("NOT_FOUND", "구독 정보를 찾을 수 없습니다.");
     return { success: true, nextBillingDate: latest.next_billing_date, message: "이미 처리된 결제예요." };
+  }
+
+  // 다음 결제일 기준으로 사전 알림 재예약. 결제 완료 처리는 끝났으므로 실패해도 되돌리지 않고 안내한다.
+  try {
+    await syncSubscriptionSchedules({
+      subscriptionId,
+      userId,
+      nextBillingDate,
+      status: current.status,
+      useCustomAlert: current.use_custom_alert,
+      customAlertDays: current.custom_alert_days,
+      customAlertTime: current.custom_alert_time,
+    });
+  } catch (error) {
+    console.error("[payments] schedule sync failed", error instanceof Error ? error.message : error);
+    return { success: true, nextBillingDate, message: "결제 완료로 처리했어요.", warning: "다음 결제 알림 예약에 실패했어요. 구독 정보를 다시 저장하면 예약돼요." };
   }
   return { success: true, nextBillingDate, message: "결제 완료로 처리했어요." };
 }

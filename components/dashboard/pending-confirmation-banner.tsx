@@ -14,6 +14,7 @@ export function PendingConfirmationBanner({ items }: { items: PendingConfirmatio
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [allDone, setAllDone] = useState(false);
+  const [warning, setWarning] = useState<string | null>(null);
   const [, startTransition] = useTransition();
 
   const confirm = (item: PendingConfirmationSubscriptionItem) => {
@@ -24,7 +25,10 @@ export function PendingConfirmationBanner({ items }: { items: PendingConfirmatio
         const result = await confirmSubscriptionPaymentAction({ subscriptionId: item.id, expectedCurrentNextBillingDate: item.nextBillingDate });
         if (!result.success) {
           setErrors((prev) => ({ ...prev, [item.id]: result.error.message }));
-        } else if (items.length === 1) {
+          return;
+        }
+        setWarning(result.warning ?? null);
+        if (items.length === 1) {
           setAllDone(true);
           window.setTimeout(() => setAllDone(false), DONE_MESSAGE_MS);
         }
@@ -37,7 +41,14 @@ export function PendingConfirmationBanner({ items }: { items: PendingConfirmatio
     });
   };
 
+  const warningNotice = warning ? (
+    <p role="alert" className="rounded-xl bg-status-warning-subtle p-3 text-body text-status-warning-foreground">
+      {warning}
+    </p>
+  ) : null;
+
   if (items.length === 0) {
+    if (warningNotice) return warningNotice;
     return allDone ? (
       <p role="status" className="flex items-center gap-2 rounded-xl bg-status-success-subtle p-4 text-body text-status-success-foreground">
         <CircleCheck aria-hidden="true" className="size-5 shrink-0" />
@@ -53,6 +64,7 @@ export function PendingConfirmationBanner({ items }: { items: PendingConfirmatio
         결제 확인이 필요한 구독 {items.length}건
       </h2>
       <p className="mt-1 text-body text-foreground">예정된 결제가 정상적으로 진행되었는지 확인해 주세요.</p>
+      {warningNotice ? <div className="mt-3">{warningNotice}</div> : null}
       <ul className="mt-3 flex flex-col gap-2">
         {items.map((item) => {
           const busy = pendingId === item.id;

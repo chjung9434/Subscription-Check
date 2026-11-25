@@ -24,3 +24,18 @@ export function daysBetween(from: string, to: string): number {
   const MS_PER_DAY = 86_400_000;
   return (Date.UTC(b.year, b.month - 1, b.day) - Date.UTC(a.year, a.month - 1, a.day)) / MS_PER_DAY;
 }
+
+/** 역법 날짜에 일수를 더한다 (음수면 뺀다) */
+export function addDays(date: string, days: number): string {
+  const parsed = parseCalendarDate(date);
+  if (!parsed) throw new Error(`invalid calendar date: ${date}`);
+  return new Date(Date.UTC(parsed.year, parsed.month - 1, parsed.day + days)).toISOString().slice(0, 10);
+}
+
+/** 서울 시각(날짜 + "HH:mm[:ss]")을 UTC ISO 문자열로. 한국은 서머타임이 없어 항상 UTC+9. */
+export function seoulDateTimeToIso(date: string, time: string): string {
+  const parsed = parseCalendarDate(date);
+  const match = /^(\d{2}):(\d{2})(?::(\d{2}))?$/.exec(time);
+  if (!parsed || !match) throw new Error(`invalid date/time: ${date} ${time}`);
+  return new Date(Date.UTC(parsed.year, parsed.month - 1, parsed.day, Number(match[1]) - 9, Number(match[2]), Number(match[3] ?? 0))).toISOString();
+}

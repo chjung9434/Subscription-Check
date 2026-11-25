@@ -15,3 +15,10 @@ export function formatDate(date: string): string {
   const [year, month, day] = date.split("-").map(Number);
   return `${year}년 ${month}월 ${day}일`;
 }
+
+const SEOUL_DATE_TIME = new Intl.DateTimeFormat("ko-KR", { timeZone: "Asia/Seoul", month: "long", day: "numeric", hour: "numeric", minute: "2-digit" });
+
+/** 시각(timestamptz)을 서울 기준으로: "11월 25일 오전 9:00" */
+export function formatSeoulDateTime(iso: string): string {
+  return SEOUL_DATE_TIME.format(new Date(iso));
+}
