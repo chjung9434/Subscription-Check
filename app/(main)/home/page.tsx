@@ -1,13 +1,14 @@
 import Link from "next/link";
 import { Plus } from "lucide-react";
+import { PendingConfirmationBanner } from "@/components/dashboard/pending-confirmation-banner";
 import { SpendingSummaryCard } from "@/components/dashboard/spending-summary-card";
 import { UpcomingTimeline } from "@/components/dashboard/upcoming-timeline";
 import { PageHeading } from "@/components/ui/page-heading";
 import { buttonStyles, cardStyles } from "@/components/ui/styles";
-import { getHomeDashboardSummary } from "@/lib/data/dashboard";
+import { getHomeDashboardSummary, getPendingConfirmationSubscriptions } from "@/lib/data/dashboard";
 
 export default async function HomePage() {
-  const data = await getHomeDashboardSummary();
+  const [data, pending] = await Promise.all([getHomeDashboardSummary(), getPendingConfirmationSubscriptions()]);
 
   if (data.activeSubscriptionCount === 0) {
     return (
@@ -37,8 +38,8 @@ export default async function HomePage() {
           </Link>
         }
       />
-      {/* 결제 확인 필요 배너는 '결제 예정일 경과 감지' 작업에서 이 위치에 추가 */}
       <div className="flex flex-col gap-6">
+        <PendingConfirmationBanner items={pending} />
         <SpendingSummaryCard data={data} />
         <UpcomingTimeline items={data.upcomingList} />
       </div>
