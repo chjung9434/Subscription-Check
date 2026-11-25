@@ -22,6 +22,7 @@ const REQUIRED_TABLES = [
 
 const client = new pg.Client({ connectionString: url });
 const failures = [];
+const warnings = [];
 try {
   await client.connect();
   await client.query("begin read only");
@@ -45,8 +46,10 @@ try {
   const { rows: applied } = await client
     .query(`select version from supabase_migrations.schema_migrations`)
     .catch(() => ({ rows: null }));
-  if (applied === null) failures.push("supabase_migrations.schema_migrations를 읽을 수 없음 (supabase db push로 적용했는지 확인)");
-  else for (const version of local) if (!applied.some((row) => row.version === version)) failures.push(`마이그레이션 미적용: ${version}`);
+  if (applied === null) {
+    // SQL 편집기로 직접 적용하면 적용 기록 테이블이 없다: 위의 테이블·RLS·프리셋 점검으로 판단
+    warnings.push("마이그레이션 적용 기록(supabase_migrations)이 없음 — SQL 편집기로 직접 적용한 경우 정상이며, 위 테이블·RLS·프리셋 점검 결과로 확인합니다.");
+  } else for (const version of local) if (!applied.some((row) => row.version === version)) failures.push(`마이그레이션 미적용: ${version}`);
   await client.query("rollback");
 } catch (error) {
   failures.push(`DB 연결/조회 실패: ${error instanceof Error ? error.message : String(error)}`);
@@ -54,8 +57,9 @@ try {
   await client.end().catch(() => {});
 }
 
+for (const warning of warnings) console.warn(`경고: ${warning}`);
 if (failures.length > 0) {
   console.error("DB 점검 실패:\n" + failures.map((line) => ` - ${line}`).join("\n"));
   process.exit(1);
 }
-console.log(`DB 점검 통과: 테이블 ${REQUIRED_TABLES.length}개 RLS 활성·정책 있음, 프리셋 30종, 마이그레이션 모두 적용`);
+console.log(`DB 점검 통과: 테이블 ${REQUIRED_TABLES.length}개 RLS 활성·정책 있음, 프리셋 30종${warnings.length ? "" : ", 마이그레이션 모두 적용"}`);

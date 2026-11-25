@@ -2,6 +2,8 @@
 
 표준 Next.js(Node.js) 서버로 빌드·실행합니다. 운영 호스팅은 Vercel(Hobby)을 사용하며, 다른 Node.js 호스팅에서도 같은 절차로 동작합니다.
 
+대시보드에서 직접 진행하는 단계별 체크리스트는 [DEPLOYMENT-CHECKLIST.md](./DEPLOYMENT-CHECKLIST.md)를 보세요. 아래는 CLI 기준 요약입니다.
+
 ## 1. Supabase 운영 프로젝트
 
 1. Supabase에서 새 프로젝트를 만들고 리전은 서울(ap-northeast-2)을 권장합니다.
