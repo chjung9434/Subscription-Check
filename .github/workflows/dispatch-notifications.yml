@@ -24,9 +24,10 @@ jobs:
           APP_URL: ${{ secrets.APP_URL }}
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
         run: |
+          # 시크릿을 아직 넣지 않았으면(알림 기능 미사용) 실패 메일이 쌓이지 않도록 건너뛴다
           if [ -z "$APP_URL" ] || [ -z "$CRON_SECRET" ]; then
-            echo "::error::APP_URL and CRON_SECRET repository secrets are required"
-            exit 1
+            echo "::notice::APP_URL/CRON_SECRET repository secrets are not set; skipping dispatch"
+            exit 0
           fi
           status=$(curl -sS -o response.json -w "%{http_code}" -X POST "$APP_URL/api/v1/notifications/dispatch" \
             -H "Authorization: Bearer $CRON_SECRET" --max-time 120)
