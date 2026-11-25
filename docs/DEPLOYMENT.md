@@ -1,6 +1,6 @@
 # 구독체크 운영 배포 가이드
 
-표준 Next.js(Node.js) 서버로 빌드·실행합니다. 특정 호스팅에 묶이지 않으며, Vercel·Render·Fly.io·자체 서버 어디서나 같은 절차입니다.
+표준 Next.js(Node.js) 서버로 빌드·실행합니다. 운영 호스팅은 Vercel(Hobby)을 사용하며, 다른 Node.js 호스팅에서도 같은 절차로 동작합니다.
 
 ## 1. Supabase 운영 프로젝트
 
@@ -50,19 +50,25 @@ VAPID 키 생성:
 node --input-type=module -e "import {generateVAPIDKeys} from 'web-push'; console.log(generateVAPIDKeys())"
 ```
 
-## 3. 빌드·실행
+## 3. 빌드·배포
+
+배포 전 점검(타입 검사, 린트, 단위 테스트, 프로덕션 빌드):
 
 ```bash
 npm ci
 npm run predeploy:check
-npm run start
 ```
 
-`predeploy:check`는 타입 검사, 린트, 단위 테스트, 프로덕션 빌드를 순서대로 실행합니다.
+Vercel: 프로젝트의 Framework는 Next.js, Node.js 20 이상. 2장의 환경 변수를 Production 환경에 넣고 배포합니다 (`npx vercel deploy --prod`). 다른 Node.js 호스팅은 `npm run build && npm run start`.
 
 ## 4. 예약 알림 크론
 
-10분마다 아래 엔드포인트를 호출하도록 크론을 등록합니다 (GET·POST 모두 허용).
+10분마다 발송 엔드포인트를 호출해야 합니다 (GET·POST 모두 허용, `Authorization: Bearer $CRON_SECRET`).
+
+- **Vercel Hobby(현재 선택)**: Vercel 크론은 하루 1회만 가능하므로 `.github/workflows/dispatch-notifications.yml`(GitHub Actions)이 10분마다 호출합니다. 저장소 Settings → Secrets and variables → Actions에 `APP_URL`(운영 주소), `CRON_SECRET`(Vercel 환경 변수와 같은 값)을 넣으세요. 예약 실행은 기본 브랜치에서만 동작하고 몇 분 늦게 시작될 수 있습니다. Actions 탭에서 `Run workflow`로 바로 시험할 수 있습니다.
+- **Vercel Pro로 바꾸는 경우**: `vercel.json`에 `{"crons":[{"path":"/api/v1/notifications/dispatch","schedule":"*/10 * * * *"}]}`를 추가하면 Vercel이 `CRON_SECRET`을 Bearer 헤더로 붙여 GET 호출합니다. 이때 GitHub Actions 워크플로는 꺼 두세요.
+
+수동 호출:
 
 ```bash
 curl -X POST https://app.example.com/api/v1/notifications/dispatch -H "Authorization: Bearer $CRON_SECRET"

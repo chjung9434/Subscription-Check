@@ -1,0 +1,38 @@
+# 결제 사전 알림 발송 크론 (Vercel Hobby는 하루 1회 크론만 허용하므로 GitHub Actions로 10분마다 호출)
+# 필요 저장소 시크릿: APP_URL (예: https://subscription-check.vercel.app), CRON_SECRET (Vercel 환경 변수와 같은 값)
+# 예약 실행은 기본 브랜치에서만 동작하며, GitHub 사정에 따라 몇 분 늦게 시작될 수 있습니다.
+name: Dispatch payment reminders
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: dispatch-notifications
+  cancel-in-progress: false
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Call dispatch endpoint
+        env:
+          APP_URL: ${{ secrets.APP_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$APP_URL" ] || [ -z "$CRON_SECRET" ]; then
+            echo "::error::APP_URL and CRON_SECRET repository secrets are required"
+            exit 1
+          fi
+          status=$(curl -sS -o response.json -w "%{http_code}" -X POST "$APP_URL/api/v1/notifications/dispatch" \
+            -H "Authorization: Bearer $CRON_SECRET" --max-time 120)
+          cat response.json
+          echo
+          if [ "$status" != "200" ]; then
+            echo "::error::dispatch returned HTTP $status"
+            exit 1
+          fi
