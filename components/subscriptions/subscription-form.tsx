@@ -1,16 +1,15 @@
 "use client";
 
-import { Check } from "lucide-react";
 import { useActionState, useState } from "react";
 import { TextField } from "@/components/auth/text-field";
+import { PresetCatalogGrid } from "./preset-catalog-grid";
 import { FieldError, FormMessage } from "@/components/ui/form-message";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { Spinner } from "@/components/ui/spinner";
 import { buttonStyles, inputStyles } from "@/components/ui/styles";
-import type { PresetOption } from "@/lib/data/subscriptions";
-import { formatAmount } from "@/lib/format";
+import type { GetPresetsResult, PresetSummaryItem } from "@/lib/presets/types";
 import { IDLE, type FormState } from "@/lib/form-state";
-import { CATEGORY_OPTIONS, CURRENCY_LABELS, CYCLE_LABELS, CYCLE_SUFFIX, STATUS_LABELS } from "@/lib/subscriptions/labels";
+import { CATEGORY_OPTIONS, CURRENCY_LABELS, CYCLE_LABELS, STATUS_LABELS } from "@/lib/subscriptions/labels";
 import { BILLING_CYCLES, CURRENCY_CODES, SUBSCRIPTION_STATUSES, type BillingCycleType, type CurrencyCode, type SubscriptionStatus } from "@/types/database";
 
 export interface SubscriptionFormValues {
@@ -44,7 +43,7 @@ type Props = {
   initial: SubscriptionFormValues;
   submitLabel: string;
   subscriptionId?: string;
-  presets?: PresetOption[];
+  presets?: GetPresetsResult;
 };
 
 export function SubscriptionForm({ action, initial, submitLabel, subscriptionId, presets }: Props) {
@@ -53,7 +52,7 @@ export function SubscriptionForm({ action, initial, submitLabel, subscriptionId,
   const errors = state.status === "error" ? state.fieldErrors : undefined;
   const set = <K extends keyof SubscriptionFormValues>(key: K, value: SubscriptionFormValues[K]) => setValues((prev) => ({ ...prev, [key]: value }));
 
-  const applyPreset = (preset: PresetOption | null) => {
+  const applyPreset = (preset: PresetSummaryItem | null, serviceName?: string) => {
     setValues((prev) =>
       preset
         ? {
@@ -65,8 +64,9 @@ export function SubscriptionForm({ action, initial, submitLabel, subscriptionId,
             currency: preset.defaultCurrency,
             billingCycle: preset.defaultBillingCycle,
           }
-        : { ...prev, presetId: null, serviceName: "", category: "", amount: "", currency: "KRW", billingCycle: "MONTHLY" },
+        : { ...prev, presetId: null, serviceName: serviceName ?? "", category: "", amount: "", currency: "KRW", billingCycle: "MONTHLY" },
     );
+    if (!preset && serviceName) document.getElementById("service_name")?.focus();
   };
 
   const categories: readonly string[] = CATEGORY_OPTIONS.includes(values.category as (typeof CATEGORY_OPTIONS)[number]) || !values.category ? CATEGORY_OPTIONS : [values.category, ...CATEGORY_OPTIONS];
@@ -76,48 +76,7 @@ export function SubscriptionForm({ action, initial, submitLabel, subscriptionId,
       {subscriptionId ? <input type="hidden" name="id" value={subscriptionId} /> : null}
       <input type="hidden" name="preset_id" value={values.presetId ?? ""} />
 
-      {presets ? (
-        <section aria-labelledby="preset-heading" className="flex flex-col gap-3">
-          <h2 id="preset-heading" className="text-section text-foreground">
-            인기 구독 서비스 빠른 선택
-          </h2>
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              type="button"
-              aria-pressed={values.presetId === null}
-              onClick={() => applyPreset(null)}
-              disabled={pending}
-              className={`min-h-14 rounded-xl border p-3 text-left text-body font-semibold outline-none focus-visible:ring-2 focus-visible:ring-primary ${
-                values.presetId === null ? "border-primary bg-primary-subtle text-primary" : "border-border bg-surface text-foreground"
-              }`}
-            >
-              직접 입력
-            </button>
-            {presets.map((preset) => {
-              const selected = values.presetId === preset.id;
-              return (
-                <button
-                  key={preset.id}
-                  type="button"
-                  aria-pressed={selected}
-                  onClick={() => applyPreset(preset)}
-                  disabled={pending}
-                  className={`relative flex min-h-14 flex-col items-start rounded-xl border p-3 text-left outline-none focus-visible:ring-2 focus-visible:ring-primary ${
-                    selected ? "border-primary bg-primary-subtle" : "border-border bg-surface"
-                  }`}
-                >
-                  <span className="pr-5 text-body font-semibold text-foreground">{preset.serviceName}</span>
-                  <span className="text-caption text-muted-foreground">
-                    {formatAmount(preset.defaultAmount, preset.defaultCurrency)}
-                    {CYCLE_SUFFIX[preset.defaultBillingCycle]}
-                  </span>
-                  {selected ? <Check aria-hidden="true" className="absolute top-3 right-3 size-4 text-primary" /> : null}
-                </button>
-              );
-            })}
-          </div>
-        </section>
-      ) : null}
+      {presets ? <PresetCatalogGrid result={presets} selectedId={values.presetId} onSelect={applyPreset} disabled={pending} /> : null}
 
       <section aria-labelledby="required-heading" className="flex flex-col gap-4 rounded-xl border border-border bg-surface p-4">
         <h2 id="required-heading" className="text-section text-foreground">

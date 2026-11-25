@@ -25,15 +25,6 @@ export interface SubscriptionDetail extends SubscriptionListItem {
   presetGuide: { guideText: string; officialUrl: string } | null;
 }
 
-export interface PresetOption {
-  id: string;
-  serviceName: string;
-  category: string;
-  defaultAmount: number;
-  defaultCurrency: CurrencyCode;
-  defaultBillingCycle: BillingCycleType;
-}
-
 /** 로그인 사용자를 확인한다. proxy가 보호 경로를 막지만 데이터 함수도 스스로 확인한다. */
 async function requireUser() {
   const supabase = await createSupabaseServerClient();
@@ -99,26 +90,4 @@ export async function getSubscriptionDetail(id: string): Promise<SubscriptionDet
     createdAt: data.created_at,
     presetGuide: preset ? { guideText: preset.cancellation_guide_text, officialUrl: preset.cancellation_official_url } : null,
   };
-}
-
-/** 등록 폼 자동 완성용 프리셋 목록 (공개 데이터) */
-export async function getPresetOptions(): Promise<PresetOption[]> {
-  const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase
-    .from("subscription_presets")
-    .select("id, service_name, category, default_amount, default_currency, default_billing_cycle")
-    .order("sort_order", { ascending: true });
-
-  if (error) {
-    console.error("[subscriptions] preset query failed", { code: error.code });
-    throw new Error("프리셋을 불러오지 못했습니다.");
-  }
-  return data.map((row) => ({
-    id: row.id,
-    serviceName: row.service_name,
-    category: row.category,
-    defaultAmount: row.default_amount,
-    defaultCurrency: row.default_currency,
-    defaultBillingCycle: row.default_billing_cycle,
-  }));
 }
