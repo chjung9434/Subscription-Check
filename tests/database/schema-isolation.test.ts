@@ -36,6 +36,7 @@ describe("schema", () => {
     );
     expect(rows).toEqual(
       [
+        "cancellation_guide_reports",
         "notification_logs",
         "notification_preferences",
         "profiles",

@@ -23,7 +23,33 @@ export type Database = {
           }
         },"public": {
           Tables: {
-            "notification_logs": {
+            "cancellation_guide_reports": {
+                  Row: {
+                    "created_at": string,"details": string | null,"id": string,"preset_id": string | null,"report_reason": string,"service_name": string,"status": string,"subscription_id": string | null,"updated_at": string,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"details"?: string | null,"id"?: string,"preset_id"?: string | null,"report_reason": string,"service_name": string,"status"?: string,"subscription_id"?: string | null,"updated_at"?: string,"user_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"details"?: string | null,"id"?: string,"preset_id"?: string | null,"report_reason"?: string,"service_name"?: string,"status"?: string,"subscription_id"?: string | null,"updated_at"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "cancellation_guide_reports_preset_id_fkey"
+      columns: ["preset_id"]
+isOneToOne: false
+      referencedRelation: "subscription_presets"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "cancellation_guide_reports_subscription_id_fkey"
+      columns: ["subscription_id"]
+isOneToOne: false
+      referencedRelation: "subscriptions"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"notification_logs": {
                   Row: {
                     "body": string,"channel": string,"error_message": string | null,"id": string,"is_read": boolean,"sent_at": string,"status": string,"subscription_id": string | null,"title": string,"user_id": string
                   }

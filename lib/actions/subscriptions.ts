@@ -183,3 +183,38 @@ export async function deleteSubscriptionAction(_prev: FormState, formData: FormD
   revalidateSubscriptionViews(id.data);
   redirect("/subscriptions?saved=deleted");
 }
+
+export type TerminateResult = { success: true; warning?: string } | { success: false; message: string };
+
+/** 공식 사이트에서 해지한 뒤 구독체크에서도 '종료'로 바꾼다 (예약 알림 취소 포함) */
+export async function terminateSubscriptionAction(input: { id: string }): Promise<TerminateResult> {
+  const { supabase, userId } = await currentUser();
+  if (!userId) return { success: false, message: "로그인이 필요해요. 다시 로그인해 주세요." };
+  const id = SubscriptionIdSchema.safeParse(input.id);
+  if (!id.success) return { success: false, message: "구독 정보를 찾을 수 없습니다." };
+
+  const { data, error } = await supabase
+    .from("subscriptions")
+    .update({ status: "TERMINATED" })
+    .eq("id", id.data)
+    .eq("user_id", userId)
+    .select("next_billing_date, status, use_custom_alert, custom_alert_days, custom_alert_time")
+    .maybeSingle();
+  if (error) {
+    console.error("[subscriptions] terminate failed", { code: error.code });
+    return { success: false, message: "구독을 종료하지 못했어요. 다시 시도해 주세요." };
+  }
+  if (!data) return { success: false, message: "구독 정보를 찾을 수 없습니다." };
+
+  const scheduled = await syncSchedulesSafely({
+    subscriptionId: id.data,
+    userId,
+    nextBillingDate: data.next_billing_date,
+    status: data.status,
+    useCustomAlert: data.use_custom_alert,
+    customAlertDays: data.custom_alert_days,
+    customAlertTime: data.custom_alert_time,
+  });
+  revalidateSubscriptionViews(id.data);
+  return scheduled ? { success: true } : { success: true, warning: "구독은 종료했지만 예약된 알림을 취소하지 못했어요. 다시 시도해 주세요." };
+}

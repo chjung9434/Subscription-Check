@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ExternalLink, Pencil } from "lucide-react";
+import { Pencil } from "lucide-react";
+import { CancellationGuideSection } from "@/components/subscriptions/cancellation-guide-section";
 import { DeleteSubscriptionButton } from "@/components/subscriptions/delete-subscription-button";
 import { SavedNotice } from "@/components/subscriptions/saved-notice";
 import { StatusBadge } from "@/components/subscriptions/status-badge";
@@ -59,24 +60,12 @@ export default async function SubscriptionDetailPage({
           {subscription.memo ? <p className="mt-4 border-t border-border pt-4 text-body whitespace-pre-line text-foreground">{subscription.memo}</p> : null}
         </section>
 
-        {subscription.presetGuide ? (
-          <section className={cardStyles} aria-labelledby="guide-heading">
-            <h2 id="guide-heading" className="text-section text-foreground">
-              해지 가이드
-            </h2>
-            <p className="mt-2 text-body whitespace-pre-line text-muted-foreground">{subscription.presetGuide.guideText}</p>
-            <a
-              href={subscription.presetGuide.officialUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={`${buttonStyles.secondary} mt-4 w-full`}
-            >
-              공식 해지 페이지 바로가기
-              <ExternalLink aria-hidden="true" className="size-4" />
-              <span className="sr-only">(새 탭에서 열림)</span>
-            </a>
-          </section>
-        ) : null}
+        <CancellationGuideSection
+          subscriptionId={subscription.id}
+          serviceName={subscription.serviceName}
+          status={subscription.status}
+          guide={subscription.presetGuide}
+        />
 
         <DeleteSubscriptionButton id={subscription.id} serviceName={subscription.serviceName} />
       </div>
