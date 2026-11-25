@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import type { FieldErrors, FormState } from "@/lib/form-state";
 import { syncSubscriptionSchedules } from "@/lib/notifications/schedules";
-import { billingDayOf } from "@/lib/subscriptions/billing-day";
+import { parseCalendarDate } from "@/lib/billing/cycle";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { SubscriptionInsertSchema } from "@/lib/validations/schema";
 
@@ -67,8 +67,9 @@ export async function createSubscriptionAction(_prev: FormState, formData: FormD
   const { supabase, userId } = await currentUser();
   if (!userId) return UNAUTHORIZED;
 
-  const date = text(formData, "next_billing_date");
-  const parsed = SubscriptionInsertSchema.safeParse(readForm(formData, billingDayOf(date) ?? 1));
+  // 날짜가 잘못됐으면 next_billing_date 검증 오류로 안내되므로 billing_day는 임시값
+  const date = parseCalendarDate(text(formData, "next_billing_date"));
+  const parsed = SubscriptionInsertSchema.safeParse(readForm(formData, date?.day ?? 1));
   if (!parsed.success) return validationError(parsed.error);
 
   const { data, error } = await supabase
@@ -108,7 +109,7 @@ export async function updateSubscriptionAction(_prev: FormState, formData: FormD
 
   // 결제 예정일이 바뀐 경우에만 청구 기준일을 다시 정한다 (31일 구독이 30일로 보정된 날짜를 유지하는 경우 보호)
   const date = text(formData, "next_billing_date");
-  const billingDay = date === existing.next_billing_date ? existing.billing_day : (billingDayOf(date) ?? existing.billing_day);
+  const billingDay = date === existing.next_billing_date ? existing.billing_day : (parseCalendarDate(date)?.day ?? existing.billing_day);
 
   const parsed = SubscriptionInsertSchema.safeParse(readForm(formData, billingDay));
   if (!parsed.success) return validationError(parsed.error);

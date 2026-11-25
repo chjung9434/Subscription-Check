@@ -1,21 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { formatAmount, formatDate } from "@/lib/format";
-import { billingDayOf } from "@/lib/subscriptions/billing-day";
 import { containsSensitivePaymentInfo, SubscriptionInsertSchema } from "@/lib/validations/schema";
-
-describe("billingDayOf", () => {
-  it.each([
-    ["2026-03-31", 31],
-    ["2026-12-01", 1],
-    ["2026-02-28", 28],
-  ])("%s -> %i", (date, day) => {
-    expect(billingDayOf(date)).toBe(day);
-  });
-
-  it.each(["", "2026-3-1", "2026-12-25T00:00:00Z", "2026-12-00", "2026-12-32"])("returns null for %j", (date) => {
-    expect(billingDayOf(date)).toBeNull();
-  });
-});
 
 describe("containsSensitivePaymentInfo", () => {
   it.each(["1234567812345678", "1234-5678-9012-3456", "카드 1234 5678 9012 3456", "CVC 123", "cvv:1234", "보안코드 987"])("flags %j", (value) => {
