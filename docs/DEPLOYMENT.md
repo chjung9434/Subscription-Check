@@ -61,7 +61,7 @@ npm ci
 npm run predeploy:check
 ```
 
-Vercel: 프로젝트의 Framework는 Next.js, Node.js 20 이상. 2장의 환경 변수를 Production 환경에 넣고 배포합니다 (`npx vercel deploy --prod`). 다른 Node.js 호스팅은 `npm run build && npm run start`.
+Vercel: 프로젝트의 Framework는 Next.js, Node.js 20 이상. `vercel.json`이 서버 함수 리전을 서울(`icn1`)로 고정해 Supabase(서울)와의 왕복 지연을 줄입니다. 2장의 환경 변수를 Production 환경에 넣고 배포합니다 (`npx vercel deploy --prod`). 다른 Node.js 호스팅은 `npm run build && npm run start`.
 
 ## 4. 예약 알림 크론
 

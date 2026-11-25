@@ -6,7 +6,8 @@ import packageJson from "@/package.json";
 export const dynamic = "force-dynamic";
 
 const NO_STORE = { "Cache-Control": "no-store, no-cache, must-revalidate" };
-const DB_TIMEOUT_MS = 1_000;
+// 콜드 스타트 직후 첫 연결(TLS 포함)은 1초를 넘길 수 있어 여유를 둔다
+const DB_TIMEOUT_MS = 3_000;
 
 /** 배포 상태 점검 (공개). 비밀값·연결 문자열은 응답에 담지 않는다. */
 export async function GET() {
