@@ -1,5 +1,6 @@
 import "server-only";
 
+import { readTimeout } from "@/lib/data/read-timeout";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { BillingCycleType, CurrencyCode, SubscriptionRow, SubscriptionStatus } from "@/types/database";
 
@@ -56,7 +57,8 @@ export async function getSubscriptionsList(): Promise<SubscriptionListItem[]> {
     .select("id, service_name, category, amount, currency, billing_cycle, next_billing_date, payment_method_memo, status, preset_id")
     .eq("user_id", userId)
     .order("next_billing_date", { ascending: true })
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .abortSignal(readTimeout());
 
   if (error) {
     console.error("[subscriptions] list query failed", { code: error.code });
@@ -74,6 +76,7 @@ export async function getSubscriptionDetail(id: string): Promise<SubscriptionDet
     .select("*, subscription_presets(cancellation_guide_text, cancellation_official_url)")
     .eq("id", id)
     .eq("user_id", userId)
+    .abortSignal(readTimeout())
     .maybeSingle();
 
   if (error) {

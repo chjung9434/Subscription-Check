@@ -1,5 +1,6 @@
 import "server-only";
 
+import { readTimeout } from "@/lib/data/read-timeout";
 import { unstable_cache } from "next/cache";
 import { createSupabasePublicClient } from "@/lib/supabase/public";
 import type { GetPresetsResult, PresetSummaryItem } from "./types";
@@ -12,7 +13,8 @@ const loadPresets = unstable_cache(
     const { data, error } = await createSupabasePublicClient()
       .from("subscription_presets")
       .select("id, service_name, category, default_amount, default_currency, default_billing_cycle, logo_url, sort_order")
-      .order("sort_order", { ascending: true });
+      .order("sort_order", { ascending: true })
+      .abortSignal(readTimeout());
     if (error) {
       throw new Error(`preset query failed: ${error.code ?? error.message}`);
     }
