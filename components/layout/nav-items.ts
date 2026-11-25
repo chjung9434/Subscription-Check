@@ -1,4 +1,4 @@
-import { Bell, House, ListChecks, type LucideIcon } from "lucide-react";
+import { Bell, CreditCard, House, type LucideIcon } from "lucide-react";
 
 export type NavItem = {
   href: string;
@@ -8,7 +8,7 @@ export type NavItem = {
 
 export const NAV_ITEMS: readonly NavItem[] = [
   { href: "/home", label: "홈", icon: House },
-  { href: "/subscriptions", label: "구독", icon: ListChecks },
+  { href: "/subscriptions", label: "구독", icon: CreditCard },
   { href: "/notifications", label: "알림", icon: Bell },
 ];
 

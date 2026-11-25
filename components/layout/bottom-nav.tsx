@@ -20,7 +20,7 @@ export function BottomNav() {
               <Link
                 href={href}
                 aria-current={active ? "page" : undefined}
-                className={`flex min-h-14 flex-col items-center justify-center gap-1 text-caption outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset ${
+                className={`flex h-15 flex-col items-center justify-center gap-1 text-caption outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset ${
                   active ? "bg-primary-subtle font-semibold text-primary" : "text-muted-foreground"
                 }`}
               >

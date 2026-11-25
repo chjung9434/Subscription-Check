@@ -7,7 +7,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="mx-auto flex min-h-dvh max-w-md flex-col bg-background md:border-x md:border-border md:shadow-sm">
       <AppHeader />
-      <main className="flex-1 px-4 pt-6 pb-24">{children}</main>
+      {/* 하단 탭 바(60px + 안전 영역)에 가리지 않도록 여유 패딩 */}
+      <main className="flex-1 px-4 pt-6 pb-[calc(96px+env(safe-area-inset-bottom))]">{children}</main>
       <BottomNav />
     </div>
   );
